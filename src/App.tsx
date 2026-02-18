@@ -8,11 +8,11 @@ export default function App() {
           <div className="logo">✓</div>
           <div>
             <div className="title">Todos</div>
-            <div className="subtitle">Express + React + TypeORM</div>
+            <div className="subtitle">Plan, focus, and ship daily</div>
           </div>
         </div>
         <nav className="nav">
-          <Link to="/">All Todos</Link>
+          <Link to="/">iPF Softwares</Link>
         </nav>
       </header>
       <main className="app-main">

@@ -51,5 +51,5 @@ UI runs on `http://localhost:3000`.
 ## Docker
 ```bash
 docker build -t todos-ui .
-docker run --rm -p 3000:3000 todos-ui
+docker run --rm -p 3000:80 todos-ui
 ```
