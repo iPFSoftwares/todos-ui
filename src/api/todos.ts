@@ -1,33 +1,12 @@
 import type { Todo } from "../types";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json"
-    },
-    ...init
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Request failed: ${res.status}`);
-  }
-
-  if (res.status === 204) {
-    return undefined as T;
-  }
-
-  return res.json() as Promise<T>;
-}
+import { request } from "./client";
 
 export function listTodos() {
-  return request<Todo[]>("/api/todos");
+  return request<Todo[]>("/api/v1/todos");
 }
 
 export function createTodo(title: string) {
-  return request<Todo>("/api/todos", {
+  return request<Todo>("/api/v1/todos", {
     method: "POST",
     body: JSON.stringify({ title })
   });
@@ -35,16 +14,16 @@ export function createTodo(title: string) {
 
 export function updateTodo(
   id: number,
-  payload: Partial<Pick<Todo, "title" | "completed">>
+  payload: Partial<Pick<Todo, "title" | "status">>
 ) {
-  return request<Todo>(`/api/todos/${id}`, {
+  return request<Todo>(`/api/v1/todos/${id}`, {
     method: "PATCH",
     body: JSON.stringify(payload)
   });
 }
 
 export function deleteTodo(id: number) {
-  return request<void>(`/api/todos/${id}`, {
+  return request<void>(`/api/v1/todos/${id}`, {
     method: "DELETE"
   });
 }

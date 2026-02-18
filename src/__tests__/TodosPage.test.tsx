@@ -13,7 +13,7 @@ const createTodo = vi.fn(async (title: string) => {
   const todo: Todo = {
     id: nextId++,
     title,
-    completed: false,
+    status: "in_progress",
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z"
   };
@@ -51,7 +51,8 @@ describe("TodosPage", () => {
   beforeEach(() => {
     todos = [];
     nextId = 1;
-    listTodos.mockClear();
+    listTodos.mockReset();
+    listTodos.mockImplementation(async () => todos);
     createTodo.mockClear();
     updateTodo.mockClear();
     deleteTodo.mockClear();
@@ -75,7 +76,7 @@ describe("TodosPage", () => {
       {
         id: 1,
         title: "Ship tests",
-        completed: false,
+        status: "in_progress",
         createdAt: "2024-01-01T00:00:00.000Z",
         updatedAt: "2024-01-01T00:00:00.000Z"
       }
@@ -85,12 +86,65 @@ describe("TodosPage", () => {
 
     expect(await screen.findByText("Ship tests")).toBeInTheDocument();
 
-    const toggle = screen.getByRole("button", { name: /Mark as done/i });
-    await userEvent.click(toggle);
-    expect(updateTodo).toHaveBeenCalled();
+    const checkbox = screen.getByRole("button", { name: /Mark as completed/i });
+    await userEvent.click(checkbox);
+    expect(updateTodo).toHaveBeenCalledWith(1, { status: "completed" });
 
     const deleteButton = screen.getByRole("button", { name: /Delete/i });
     await userEvent.click(deleteButton);
     expect(deleteTodo).toHaveBeenCalledWith(1);
+  });
+
+  it("filters active and done todos", async () => {
+    todos = [
+      {
+        id: 1,
+        title: "Active item",
+        status: "in_progress",
+        createdAt: "2024-01-01T00:00:00.000Z",
+        updatedAt: "2024-01-01T00:00:00.000Z"
+      },
+      {
+        id: 2,
+        title: "Done item",
+        status: "completed",
+        createdAt: "2024-01-01T00:00:00.000Z",
+        updatedAt: "2024-01-01T00:00:00.000Z"
+      },
+      {
+        id: 3,
+        title: "Backlog item",
+        status: "backlog",
+        createdAt: "2024-01-01T00:00:00.000Z",
+        updatedAt: "2024-01-01T00:00:00.000Z"
+      }
+    ];
+
+    renderPage();
+
+    expect(await screen.findByText("Active item")).toBeInTheDocument();
+    expect(screen.queryByText("Done item")).not.toBeInTheDocument();
+    expect(screen.queryByText("Backlog item")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /^In Progress$/i }));
+    expect(screen.getByText("Active item")).toBeInTheDocument();
+    expect(screen.queryByText("Done item")).not.toBeInTheDocument();
+    expect(screen.queryByText("Backlog item")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /^Completed$/i }));
+    expect(screen.queryByText("Active item")).not.toBeInTheDocument();
+    expect(screen.getByText("Done item")).toBeInTheDocument();
+    expect(screen.queryByText("Backlog item")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /^Backlog$/i }));
+    expect(screen.queryByText("Active item")).not.toBeInTheDocument();
+    expect(screen.queryByText("Done item")).not.toBeInTheDocument();
+    expect(screen.getByText("Backlog item")).toBeInTheDocument();
+  });
+
+  it("shows error state on failed load", async () => {
+    listTodos.mockRejectedValueOnce(new Error("Load failed"));
+    renderPage();
+    expect(await screen.findByText(/Load failed/i)).toBeInTheDocument();
   });
 });

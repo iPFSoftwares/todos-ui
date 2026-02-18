@@ -72,6 +72,34 @@ body {
   font-weight: 600;
 }
 
+.nav a.active {
+  background: var(--accent-soft);
+  color: var(--accent-2);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+.nav-auth {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.nav-user {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.nav-auth button {
+  border: 1px solid #d9e6f5;
+  background: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent-2);
+}
+
 .app-main {
   padding: 0 48px 64px;
   display: flex;
@@ -85,6 +113,9 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   border: 1px solid #e3ecf7;
+  max-height: 74vh;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
 }
 
 .panel-header {
@@ -157,6 +188,11 @@ body {
   gap: 12px;
 }
 
+.todo-list-wrap {
+  overflow: auto;
+  padding-right: 6px;
+}
+
 .todo-list li {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -166,20 +202,21 @@ body {
   border-radius: 14px;
   border: 1px solid #e2ecf7;
   background: #f8fbff;
+  position: relative;
 }
 
 .todo-list li.done {
   opacity: 0.7;
 }
 
-.toggle {
-  width: 36px;
-  height: 36px;
+.todo-status-select {
+  min-width: 140px;
+  padding: 8px 10px;
   border-radius: 12px;
   border: 1px solid #d9e6f5;
-  background: var(--accent-soft);
-  cursor: pointer;
-  font-size: 18px;
+  background: #fff;
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .todo-content {
@@ -191,17 +228,60 @@ body {
   font-weight: 600;
 }
 
+.todo-status {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-2);
+}
+
 .todo-meta {
   font-size: 12px;
   color: var(--muted);
 }
 
-.delete {
-  border: none;
-  background: transparent;
-  color: var(--accent-2);
+.status-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #d9e6f5;
+  background: #fff;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
+  color: var(--accent-2);
+}
+
+.status-box.completed {
+  background: var(--accent-soft);
+}
+
+.status-box.backlog {
+  cursor: not-allowed;
+  color: #9aa7b7;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.todo-actions button {
+  border: 1px solid #d9e6f5;
+  background: #fff;
+  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--accent-2);
+}
+
+.todo-list li:hover .todo-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .empty {
@@ -217,6 +297,60 @@ body {
   color: #b00020;
 }
 
+.auth-panel {
+  width: min(560px, 100%);
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.auth-form input {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #d9e6f5;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.auth-form button {
+  background: linear-gradient(135deg, var(--accent), #2f86ff);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.form-footer {
+  margin-top: 16px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.form-footer a {
+  color: var(--accent-2);
+  text-decoration: none;
+}
+
+.form-error {
+  padding: 10px 14px;
+  background: #ffecec;
+  border: 1px solid #ffd4d4;
+  border-radius: 12px;
+  color: #b00020;
+  font-weight: 600;
+}
+
 @media (max-width: 760px) {
   .app-header {
     padding: 24px;
@@ -227,6 +361,10 @@ body {
 
   .app-main {
     padding: 0 24px 48px;
+  }
+
+  .nav-auth {
+    flex-wrap: wrap;
   }
 
   .panel-header {
@@ -240,10 +378,6 @@ body {
 
   .todo-list li {
     grid-template-columns: 1fr;
-  }
-
-  .delete {
-    justify-self: flex-start;
   }
 }
 
@@ -259,6 +393,12 @@ body {
   .panel {
     padding: 20px;
     border-radius: 16px;
+    max-height: none;
+    grid-template-rows: auto auto auto;
+  }
+
+  .todo-list-wrap {
+    max-height: 60vh;
   }
 
   .panel-header h1 {

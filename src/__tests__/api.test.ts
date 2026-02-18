@@ -19,13 +19,17 @@ describe("todos api client", () => {
     mockFetch.mockResolvedValue({
       ok: true,
       status: 200,
-      json: () => Promise.resolve([{ id: 1, title: "Test", completed: false }])
+      json: () =>
+        Promise.resolve([{ id: 1, title: "Test", status: "in_progress" }])
     });
 
     const data = await listTodos();
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://localhost:3001/api/todos",
-      expect.objectContaining({ headers: { "Content-Type": "application/json" } })
+      "http://localhost:8080/api/v1/todos",
+      expect.objectContaining({
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      })
     );
     expect(data[0].title).toBe("Test");
   });
@@ -35,22 +39,40 @@ describe("todos api client", () => {
       .mockResolvedValueOnce({
         ok: true,
         status: 201,
-        json: () => Promise.resolve({ id: 1, title: "New", completed: false })
+        json: () =>
+          Promise.resolve({ id: 1, title: "New", status: "in_progress" })
       })
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ id: 1, title: "New", completed: true })
+        json: () =>
+          Promise.resolve({ id: 1, title: "New", status: "completed" })
       })
       .mockResolvedValueOnce({ ok: true, status: 204, text: () => Promise.resolve("") });
 
     const created = await createTodo("New");
     expect(created.id).toBe(1);
 
-    const updated = await updateTodo(1, { completed: true });
-    expect(updated.completed).toBe(true);
+    const updated = await updateTodo(1, { status: "completed" });
+    expect(updated.status).toBe("completed");
 
     await deleteTodo(1);
     expect(mockFetch).toHaveBeenCalledTimes(3);
+
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      1,
+      "http://localhost:8080/api/v1/todos",
+      expect.objectContaining({ method: "POST", credentials: "include" })
+    );
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      "http://localhost:8080/api/v1/todos/1",
+      expect.objectContaining({ method: "PATCH", credentials: "include" })
+    );
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      3,
+      "http://localhost:8080/api/v1/todos/1",
+      expect.objectContaining({ method: "DELETE", credentials: "include" })
+    );
   });
 });

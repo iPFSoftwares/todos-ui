@@ -9,6 +9,17 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: "./src/setupTests.ts",
-    globals: true
+    globals: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      thresholds: {
+        branches: 90,
+        functions: 90,
+        lines: 90,
+        statements: 90
+      },
+      exclude: ["src/main.tsx", "src/types.ts"]
+    }
   }
 });

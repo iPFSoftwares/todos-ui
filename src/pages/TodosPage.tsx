@@ -6,7 +6,9 @@ import type { Todo } from "../types";
 export default function TodosPage() {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
-  const [filter, setFilter] = useState<"all" | "active" | "done">("all");
+  const [filter, setFilter] = useState<"in_progress" | "backlog" | "completed">(
+    "in_progress"
+  );
 
   const todosQuery = useQuery({
     queryKey: ["todos"],
@@ -21,8 +23,9 @@ export default function TodosPage() {
     }
   });
 
-  const toggleMutation = useMutation({
-    mutationFn: (todo: Todo) => updateTodo(todo.id, { completed: !todo.completed }),
+  const statusMutation = useMutation({
+    mutationFn: (payload: { id: number; status: Todo["status"] }) =>
+      updateTodo(payload.id, { status: payload.status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
     }
@@ -37,13 +40,7 @@ export default function TodosPage() {
 
   const filtered = useMemo(() => {
     const list = todosQuery.data || [];
-    if (filter === "active") {
-      return list.filter((todo) => !todo.completed);
-    }
-    if (filter === "done") {
-      return list.filter((todo) => todo.completed);
-    }
-    return list;
+    return list.filter((todo) => todo.status === filter);
   }, [filter, todosQuery.data]);
 
   function handleSubmit(event: React.FormEvent) {
@@ -64,24 +61,24 @@ export default function TodosPage() {
         <div className="filters">
           <button
             type="button"
-            className={filter === "all" ? "active" : ""}
-            onClick={() => setFilter("all")}
+            className={filter === "backlog" ? "active" : ""}
+            onClick={() => setFilter("backlog")}
           >
-            All
+            Backlog
           </button>
           <button
             type="button"
-            className={filter === "active" ? "active" : ""}
-            onClick={() => setFilter("active")}
+            className={filter === "in_progress" ? "active" : ""}
+            onClick={() => setFilter("in_progress")}
           >
-            Active
+            In Progress
           </button>
           <button
             type="button"
-            className={filter === "done" ? "active" : ""}
-            onClick={() => setFilter("done")}
+            className={filter === "completed" ? "active" : ""}
+            onClick={() => setFilter("completed")}
           >
-            Done
+            Completed
           </button>
         </div>
       </div>
@@ -98,44 +95,84 @@ export default function TodosPage() {
         </button>
       </form>
 
-      {todosQuery.isLoading && <div className="empty">Loading todos...</div>}
-      {todosQuery.isError && (
-        <div className="empty error">
-          {String(todosQuery.error)}
-        </div>
-      )}
+      <div className="todo-list-wrap">
+        {todosQuery.isLoading && <div className="empty">Loading todos...</div>}
+        {todosQuery.isError && (
+          <div className="empty error">
+            {String(todosQuery.error)}
+          </div>
+        )}
 
-      {!todosQuery.isLoading && filtered.length === 0 && (
-        <div className="empty">Nothing here yet. Add a todo above.</div>
-      )}
+        {!todosQuery.isLoading && filtered.length === 0 && (
+          <div className="empty">Nothing here yet. Add a todo above.</div>
+        )}
 
-      <ul className="todo-list">
-        {filtered.map((todo) => (
-          <li key={todo.id} className={todo.completed ? "done" : ""}>
-            <button
-              type="button"
-              className="toggle"
-              onClick={() => toggleMutation.mutate(todo)}
-              aria-label={todo.completed ? "Mark as active" : "Mark as done"}
-            >
-              {todo.completed ? "✓" : "○"}
-            </button>
-            <div className="todo-content">
-              <div className="todo-title">{todo.title}</div>
-              <div className="todo-meta">
-                Created {new Date(todo.createdAt).toLocaleString()}
+        <ul className="todo-list">
+          {filtered.map((todo) => (
+            <li key={todo.id} className={todo.status === "completed" ? "done" : ""}>
+              <button
+                type="button"
+                className={`status-box ${todo.status}`}
+                onClick={() => {
+                  if (todo.status === "in_progress") {
+                    statusMutation.mutate({ id: todo.id, status: "completed" });
+                  }
+                }}
+                aria-label={
+                  todo.status === "in_progress"
+                    ? "Mark as completed"
+                    : todo.status === "completed"
+                    ? "Completed"
+                    : "Backlog item"
+                }
+                disabled={todo.status !== "in_progress"}
+              >
+                {todo.status === "completed" ? "✓" : ""}
+              </button>
+              <div className="todo-content">
+                <div className="todo-title">{todo.title}</div>
+                <div className="todo-status">
+                  {todo.status === "in_progress"
+                    ? "In Progress"
+                    : todo.status === "backlog"
+                    ? "Backlog"
+                    : "Completed"}
+                </div>
+                <div className="todo-meta">
+                  Created {new Date(todo.createdAt).toLocaleString()}
+                </div>
               </div>
-            </div>
-            <button
-              type="button"
-              className="delete"
-              onClick={() => deleteMutation.mutate(todo.id)}
-            >
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
+              <div className="todo-actions">
+                {todo.status === "in_progress" && (
+                  <button
+                    type="button"
+                    aria-label="Move to backlog"
+                    onClick={() => statusMutation.mutate({ id: todo.id, status: "backlog" })}
+                  >
+                    ↩
+                  </button>
+                )}
+                {todo.status === "backlog" && (
+                  <button
+                    type="button"
+                    aria-label="Activate task"
+                    onClick={() => statusMutation.mutate({ id: todo.id, status: "in_progress" })}
+                  >
+                    ▶
+                  </button>
+                )}
+                <button
+                  type="button"
+                  aria-label="Delete"
+                  onClick={() => deleteMutation.mutate(todo.id)}
+                >
+                  ✕
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
